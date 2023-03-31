@@ -9,7 +9,9 @@
 #include<thread>
 #include<functional>
 #include <mutex> 
+#include<memory>
 
+#define DEBUG false
 
 std::mutex stdOutMutex;
 
@@ -76,12 +78,15 @@ class Data{
                 std::cout<<symbolData[row].date<<", "<<symbolData[row].openPrice<<", "<<symbolData[row].closePrice<<", "<<symbolData[row].volume<<std::endl;
             }
         }
+
+        ~Data(){
+            if(DEBUG)printMessage("Deconstructing Data Object");
+        }
 };
 
 
 class Strategy{
     public:
-
         std::string strategyName;
         std::map<std::string,int> strategyParams;
 
@@ -99,7 +104,6 @@ class Strategy{
 
 class TrendFollowingStrategy: public Strategy{
     public:
-    
         TrendFollowingStrategy(std::string strategyName){
             this->strategyName=strategyName;
             strategyParams["LOOKBACK_PERIOD"]=30;
@@ -118,7 +122,7 @@ class TrendFollowingStrategy: public Strategy{
             strategyParams["STOP_LOSS_PERCENTAGE"]=stopLoss;
         }
 
-        static float* getKMax(const Data data, int K){
+        static float* getKMax(const Data &data, int K){
             std::deque<int> Qi(K);
             int i,N=data.numberOfRows;
             float mx=INT_MIN;
@@ -144,7 +148,7 @@ class TrendFollowingStrategy: public Strategy{
             return kmax;
         }
 
-        static float* getKMin(const Data data, int K){
+        static float* getKMin(const Data &data, int K){
             std::deque<int> Qi(K);
             int i,N=data.numberOfRows;
             float mn=INT_MAX;
@@ -227,18 +231,19 @@ class TrendFollowingStrategy: public Strategy{
 
         ~TrendFollowingStrategy(){
             strategyParams.clear();
+            if(DEBUG)printMessage("Deconstructing Strategy Object");
         }
 };
 
 
 class Backtest{
     Strategy *strategyInstance;
-    Data *dataInstance;
+    std::shared_ptr<Data> dataInstance;
     int8_t* tradeSignals;
 
     public:
 
-        Backtest(Strategy *strategyInstance, Data *dataInstance){
+        Backtest(Strategy *strategyInstance, std::shared_ptr<Data> dataInstance){
             this->strategyInstance = strategyInstance;
             this->dataInstance = dataInstance;
             this->tradeSignals = nullptr;
@@ -290,9 +295,8 @@ class Backtest{
         }
 
         ~Backtest(){
-            delete strategyInstance;
-            delete dataInstance;
             delete tradeSignals;
+            if(DEBUG)printMessage("Deconstructing Backtest Object");
         }
 };
 
@@ -304,13 +308,18 @@ class Driver{
 
     public:
         std::mutex queueMutex;
+        Strategy *strategyInstance;
 
         Driver(){
-            NUM_OF_THREADS = 5;
+            NUM_OF_THREADS = 5; 
         }
 
         Driver(int NUM_OF_THREADS){
             this->NUM_OF_THREADS = NUM_OF_THREADS;
+        }
+
+        void setStrategyInstance(Strategy *strategyInstance){
+            this->strategyInstance = strategyInstance;
         }
 
         void setSymbolInputs(){
@@ -321,12 +330,16 @@ class Driver{
             symbolInputs.push(std::make_pair("Google", "data/GOOG.csv"));
         }
 
-        static void processSymbol(const std::pair<std::string,std::string> &symbolInput){
-            printMessage("Thread Strated For Symbol: "+symbolInput.first);
-            Data *symbolData = new Data(symbolInput.first, symbolInput.second);
-            Strategy *strategyInstance = new TrendFollowingStrategy("Trend Following Strategy");
+        void setSymbolInputs(std::queue<std::pair<std::string,std::string> > &symbolInputs){
+            this->symbolInputs = symbolInputs;
+        }
+
+        static void processSymbol(const std::pair<std::string,std::string> &symbolInput, Strategy *strategyInstance){
+            if(DEBUG)printMessage("Thread Strated For Symbol: "+symbolInput.first);
+            std::shared_ptr<Data> symbolData = std::make_shared<Data>(symbolInput.first, symbolInput.second);
             Backtest *backtestInstance = new Backtest(strategyInstance, symbolData);
             backtestInstance->runBacktest();
+            if(DEBUG)printMessage("Thread Completed For Symbol: "+symbolInput.first);
             delete backtestInstance;
         }
 
@@ -337,7 +350,7 @@ class Driver{
                     std::pair<std::string,std::string> symbolInput = driverInstance->symbolInputs.front();
                     driverInstance->symbolInputs.pop();
                     driverInstance->queueMutex.unlock();
-                    processSymbol(symbolInput);
+                    processSymbol(symbolInput, driverInstance->strategyInstance);
                 }
                 else{
                     driverInstance->queueMutex.unlock();
@@ -345,7 +358,7 @@ class Driver{
             }
         }
 
-        void startThreads(){
+        void runBacktest(){
             std::thread* threadsArray[NUM_OF_THREADS];
             for(int i=0;i<NUM_OF_THREADS;i++){
                 std::thread* threadInstance = new std::thread(Driver::runThreadTask, this);
@@ -356,19 +369,24 @@ class Driver{
             }
         }
 
-        void runAllBackTest(){
-            setSymbolInputs();
-            startThreads();
+        ~Driver(){
+            if(DEBUG)printMessage("Deconstructing Driver Object");
         }
-
 };
 
 
 
 int main()
 {
-    Driver driverInstance;
-    driverInstance.runAllBackTest();
+    Driver *driverInstance = new Driver();
+    Strategy *strategyInstance = new TrendFollowingStrategy("Trend Following Strategy");
+
+    driverInstance->setSymbolInputs();
+    driverInstance->setStrategyInstance(strategyInstance);
+    driverInstance->runBacktest();
+
+    delete driverInstance;
+    delete strategyInstance;
 
     return 0;
 }
