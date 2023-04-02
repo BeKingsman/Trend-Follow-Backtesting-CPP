@@ -356,9 +356,9 @@ class Driver{
         }
 
         void runBacktest(){
-            std::thread* threadsArray[NUM_OF_THREADS];
+            std::shared_ptr<std::thread> threadsArray[NUM_OF_THREADS];
             for(int i=0;i<NUM_OF_THREADS;i++){
-                std::thread* threadInstance = new std::thread(Driver::runThreadTask, this);
+                std::shared_ptr<std::thread> threadInstance= std::make_shared<std::thread>(Driver::runThreadTask, this);
                 threadsArray[i]=threadInstance;
             }
             for(int i=0;i<NUM_OF_THREADS;i++){
