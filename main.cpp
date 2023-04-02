@@ -1,5 +1,4 @@
 #include<iostream>
-#include<algorithm>
 #include<vector>
 #include<queue>
 #include<map>
@@ -7,7 +6,6 @@
 #include<string>
 #include <sstream>
 #include<thread>
-#include<functional>
 #include <mutex> 
 #include<memory>
 
