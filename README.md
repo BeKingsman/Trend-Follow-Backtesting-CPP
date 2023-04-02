@@ -22,3 +22,6 @@ TARGET_PERCENTAGE = Target Percentage that trigger to exit a trade.
 
 Results<br />
 Average profit per trade, number of total trades and winning trades are displayed for each symbol on std output. 
+
+<img width="705" alt="image" src="https://user-images.githubusercontent.com/53928332/229330968-5e76131b-08b5-449d-b587-4748e88496e0.png">
+
