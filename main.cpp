@@ -49,9 +49,8 @@ class Data{
         std::vector<DataPoint> symbolData;
         int numberOfRows;
 
-        Data(std::string symbolName, std::string fileName){
-            this->symbolName = symbolName;
-            numberOfRows = 0;
+        Data(std::string symbolName, std::string fileName)
+            : symbolName(symbolName), numberOfRows(0){
             parseData(fileName);
         }
 
@@ -241,10 +240,9 @@ class Backtest{
 
     public:
 
-        Backtest(Strategy *strategyInstance, std::shared_ptr<Data> dataInstance){
-            this->strategyInstance = strategyInstance;
-            this->dataInstance = dataInstance;
-            this->tradeSignals = nullptr;
+        Backtest(Strategy *strategyInstance, std::shared_ptr<Data> dataInstance)
+            :strategyInstance(strategyInstance), dataInstance(dataInstance), tradeSignals(nullptr){
+            
         }
 
         void printResults(const int &totalTrades, const int &numOfProfitableTrades, const float &totalProfitPercent){
@@ -308,12 +306,13 @@ class Driver{
         std::mutex queueMutex;
         Strategy *strategyInstance;
 
-        Driver(){
-            NUM_OF_THREADS = 5; 
+        Driver()
+            : NUM_OF_THREADS(5){
         }
 
-        Driver(int NUM_OF_THREADS){
-            this->NUM_OF_THREADS = NUM_OF_THREADS;
+        Driver(int NUM_OF_THREADS)
+            : NUM_OF_THREADS(NUM_OF_THREADS){
+
         }
 
         void setStrategyInstance(Strategy *strategyInstance){
