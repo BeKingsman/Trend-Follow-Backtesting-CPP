@@ -20,7 +20,5 @@ ENTER_TRIGGER_PERCENTAGE = Percentage change that trigger to enter a trade.<br /
 EXIT_TRIGGER_PERCENTAGE =  Percentage change that trigger to exit a trade.<br />
 TARGET_PERCENTAGE = Target Percentage that trigger to exit a trade.
 
-Results
+Results<br />
 Average profit per trade, number of total trades and winning trades are displayed for each symbol on std output. 
-
-
