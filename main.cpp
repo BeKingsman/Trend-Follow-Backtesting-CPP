@@ -125,23 +125,15 @@ class TrendFollowingStrategy: public Strategy{
             float mx=INT_MIN;
             float *kmax = new float[N];
 
-            for (i = 0; i < K; ++i) {
-                mx = std::max(mx,data.symbolData[i].closePrice);
-                kmax[i]=mx;
-                while ((!Qi.empty()) && data.symbolData[i].closePrice >= data.symbolData[Qi.back()].closePrice)
-                    Qi.pop_back();
-                Qi.push_back(i);
-            }
-
-            for (; i < N; ++i) {
-                kmax[i]=data.symbolData[Qi.front()].closePrice;
+            for (i=0; i < N; ++i) {
                 while ((!Qi.empty()) && Qi.front() <= i - K)
                     Qi.pop_front();
                 while ((!Qi.empty()) && data.symbolData[i].closePrice >= data.symbolData[Qi.back()].closePrice)
                     Qi.pop_back();
                 Qi.push_back(i);
+                kmax[i]=data.symbolData[Qi.front()].closePrice;
             }
-            kmax[i]=data.symbolData[Qi.front()].closePrice;
+
             return kmax;
         }
 
@@ -151,23 +143,15 @@ class TrendFollowingStrategy: public Strategy{
             float mn=INT_MAX;
             float *kmin = new float[N];
 
-            for (i = 0; i < K; ++i) {
-                mn = std::min(mn,data.symbolData[i].closePrice);
-                kmin[i]=mn;
-                while ((!Qi.empty()) && data.symbolData[i].closePrice <= data.symbolData[Qi.back()].closePrice)
-                    Qi.pop_back();
-                Qi.push_back(i);
-            }
-
-            for (; i < N; ++i) {
-                kmin[i]=data.symbolData[Qi.front()].closePrice;
+            for (i=0; i < N; ++i) {
                 while ((!Qi.empty()) && Qi.front() <= i - K)
                     Qi.pop_front();
                 while ((!Qi.empty()) && data.symbolData[i].closePrice <= data.symbolData[Qi.back()].closePrice)
                     Qi.pop_back();
                 Qi.push_back(i);
+                kmin[i]=data.symbolData[Qi.front()].closePrice;
             }
-            kmin[i]=data.symbolData[Qi.front()].closePrice;
+
             return kmin;
         }
 
